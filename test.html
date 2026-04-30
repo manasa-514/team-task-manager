@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Team Members</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        button { padding: 10px 20px; margin: 10px; font-size: 14px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; }
+        .admin { background: #dc3545; }
+        .user { background: #007bff; }
+        pre { background: #333; color: #0f0; padding: 15px; border-radius: 5px; margin-top: 20px; overflow-x: auto; max-height: 400px; }
+        .container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🏢 Create Team Members</h1>
+    <p>Make sure server is running: <strong>node server.js</strong></p>
+    
+    <div class="container">
+        <button class="admin" onclick="createUser('Admin User', 'admin@test.com', '123456', 'Admin', 'Admin')">👑 Create Admin</button>
+        <button class="user" onclick="createUser('John Developer', 'john@test.com', '123456', 'Member', 'Developer')">💻 Create Developer</button>
+        <button class="user" onclick="createUser('Sarah Tester', 'sarah@test.com', '123456', 'Member', 'Tester')">🧪 Create Tester</button>
+        <button class="user" onclick="createUser('Mike Designer', 'mike@test.com', '123456', 'Member', 'Designer')">🎨 Create Designer</button>
+        <button class="user" onclick="createUser('Lisa Manager', 'lisa@test.com', '123456', 'Member', 'Manager')">📊 Create Manager</button>
+        <button class="user" onclick="createUser('Tom Intern', 'tom@test.com', '123456', 'Member', 'Intern')">📚 Create Intern</button>
+        <button class="user" onclick="createUser('Priya HR', 'priya@test.com', '123456', 'Member', 'HR')">👥 Create HR</button>
+        <button class="user" onclick="createUser('Raj Senior', 'raj@test.com', '123456', 'Member', 'Senior')">⭐ Create Senior</button>
+    </div>
+
+    <button onclick="testGetUsers()">📋 Get All Users</button>
+    <button onclick="clearUsers()">🗑️ Clear Result</button>
+    
+    <h3>Response:</h3>
+    <pre id="result">Click buttons to create users...</pre>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        async function createUser(name, email, password, role, designation) {
+            document.getElementById('result').innerHTML = `⏳ Creating ${name}...`;
+            
+            const userData = {
+                name: name,
+                email: email,
+                password: password,
+                role: role,
+                designation: designation
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `✅ ${name} CREATED!\n\n` + JSON.stringify(data, null, 2);
+                } else {
+                    document.getElementById('result').innerHTML = `❌ ERROR for ${name}:\n\n` + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `❌ FETCH ERROR:\n\n${error.message}\n\nMake sure server is running on port 5000`;
+            }
+        }
+
+        async function testGetUsers() {
+            document.getElementById('result').innerHTML = '⏳ Fetching users...';
+            
+            try {
+                // First login to get token
+                const loginRes = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: "admin@test.com", password: "123456" })
+                });
+                
+                const loginData = await loginRes.json();
+                
+                if (!loginData.token) {
+                    document.getElementById('result').innerHTML = '❌ Please create Admin user first!';
+                    return;
+                }
+                
+                // Get users with token
+                const response = await fetch(`${API_URL}/api/users`, {
+                    headers: { 'x-auth-token': loginData.token }
+                });
+                const data = await response.json();
+                document.getElementById('result').innerHTML = '✅ ALL USERS:\n\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').innerHTML = '❌ ERROR:\n\n' + error.message;
+            }
+        }
+
+        function clearUsers() {
+            document.getElementById('result').innerHTML = 'Result cleared. Click buttons to test...';
+        }
+    </script>
+</body>
+</html>
